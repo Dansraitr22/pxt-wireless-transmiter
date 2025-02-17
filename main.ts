@@ -1,6 +1,7 @@
 
+radio.setTransmitPower(5)
 radio.setGroup(37)
-radio.setTransmitPower(3)
+
 let avrglight: number = 0
 const lightCalibrate: () => number = () => {
     let svetlo = input.lightLevel()
@@ -11,48 +12,55 @@ const lightCalibrate: () => number = () => {
     }
     return prumer = prumer / 10
 }
+
 enum STATE {
     ready = 0,
-    running =1,
-    finish =2,
+    running = 1,
+    finish = 2,
 }
-avrglight = lightCalibrate()
+input.onButtonPressed(Button.A, function () {
+    radio.sendValue("state", 0)
+    avrglight = lightCalibrate()
+    mode = STATE.ready
+    music.playTone(100, 200)
+})
 
+
+input.onButtonPressed(Button.B, function () {
+    avrglight = lightCalibrate()
+})
 let mode: STATE = STATE.ready as STATE
 let runtime: number
 basic.forever(() => {
     switch (mode) {
         case STATE.ready:
-            if (lightCalibrate() < avrglight - 20) {
+
+            if (input.lightLevel()+50<avrglight) {
+                music.playTone(300, 200)
                 runtime = control.millis()
+                radio.sendValue("state", 1)
                 mode = STATE.running as STATE
-                radio.sendValue("state", mode)
+
             }
             break;
         case STATE.running:
-            
+
             break;
         case STATE.finish:
             runtime = control.millis() - runtime
             radio.sendValue("time", runtime)
-            basic.showNumber(runtime)
-            if(input.buttonIsPressed(Button.A)){
-                radio.sendValue("state", 0)
-                mode=STATE.ready
-                
-            }
+            basic.showNumber(runtime/1000)
+
             break;
     }
 
 })
 
 radio.onReceivedValue(function (name: string, value: number) {
-if(name==="state" && value===2){
-    mode=STATE.finish
-}
-})
-radio.onReceivedValue(function (name: string, value: number) {
     if (name === "state" && value === 0) {
         mode = STATE.ready
+    }
+    if (name === "state" && value === 2) {
+        mode = STATE.finish
     }
 })
