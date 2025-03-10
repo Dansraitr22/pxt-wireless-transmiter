@@ -31,10 +31,11 @@ input.onButtonPressed(Button.B, function () {
 })
 let mode: STATE = STATE.ready as STATE
 let runtime: number
+let firsttime:boolean=false
 basic.forever(() => {
     switch (mode) {
         case STATE.ready:
-
+            firsttime=true
             if (input.lightLevel()+50<avrglight) {
                 music.playTone(300, 200)
                 runtime = control.millis()
@@ -47,10 +48,13 @@ basic.forever(() => {
 
             break;
         case STATE.finish:
-            runtime = control.millis() - runtime
-            radio.sendValue("time", runtime)
-            basic.showNumber(runtime/1000)
-
+            if(firsttime===true){
+               runtime = control.millis() - runtime
+               radio.sendValue("time", runtime)
+               runtime=(runtime / 1000)
+               firsttime=false
+                
+            } basic.showNumber(runtime)
             break;
     }
 
